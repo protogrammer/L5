@@ -21,15 +21,22 @@
 
         const sleeper = (f) =>
             new Promise(resolve =>
-                setTimeout(() => resolve(f()), 250))
+                setTimeout(() => resolve(f()), 200))
 
-        const swap = (i, j) =>
-            Promise.all([i, j].map(get)).then(([x, y]) =>
+        const swap = (i, j) => {
+			const color = document.getElementById(`elem${i}`).style.backgroundColor;
+			document.getElementById(`elem${i}`).style.backgroundColor = "lightblue";
+			document.getElementById(`elem${j}`).style.backgroundColor = "lightblue";
+            return sleeper(() => Promise.all([i, j].map(get)).then(([x, y]) =>
                 Promise.all([
                     set(i, y),
                     set(j, x),
                 ]).then(() => Promise.resolve())
-            );
+            )).finally(() => {
+				document.getElementById(`elem${i}`).style.backgroundColor = color;
+				document.getElementById(`elem${j}`).style.backgroundColor = color;
+			})
+		}
 
         const compare = (i, j) =>
             Promise.all([i, j].map(get))
@@ -41,8 +48,17 @@
                     c >= 0 ? f(acc, i + 1) : f(i, i + 1));
             return f(start, start + 1);
         }
+		
+		const locking = (f) => () => {
+			document.getElementById("sort").disabled = true;
+			document.getElementById("shuffle").disabled = true;
+			f().finally(() => {
+				document.getElementById("sort").disabled = false;
+				document.getElementById("shuffle").disabled = false;
+			})
+		}
 
-        const heapsort = () => {
+        const heapsort = locking(() => {
             const base = 4;
 
             const siftDown = (i, lim) => i * base + 1 >= lim ? Promise.resolve() :
@@ -61,26 +77,26 @@
 
             return heapify(n >> 1)
                 .then(() => body(n - 1));
-        }
+        })
 
-        const shuffle = () => {
+        const shuffle = locking(() => {
             const f = (i) => i < n ?
                 swap(i, i + Math.floor(Math.random() * (n - i)))
                     .then(() => f(i + 1))
                 : Promise.resolve();
             return f(0);
-        }
+        })
     </script>
 </head>
 <body>
-    <table class="table">
+    <table class="table" style="table-layout:fixed">
     <tr>
     {{range .indices}}
-         <td id="elem{{.}}">{{index $.numbers .}}</td>
+         <td id="elem{{.}}" style="text-align:center">{{index $.numbers .}}</td>
     {{end}}
     </tr>
     </table>
-    <button onclick="shuffle()">Shuffle!</button>
-    <button onclick="heapsort()">Sort!</button>
+    <button id="shuffle" onclick="shuffle()">Shuffle!</button>
+    <button id="sort" onclick="heapsort()">Sort!</button>
 </body>
 </html>
