@@ -19,9 +19,9 @@
             document.getElementById(`elem${i}`).innerHTML = String(val);
         })
 
-        const sleeper = (f) =>
+        const sleeper = (f, timeout) =>
             new Promise(resolve =>
-                setTimeout(() => resolve(f()), 200))
+                setTimeout(() => resolve(f()), timeout))
 
         const swap = (i, j) => {
 			const color = document.getElementById(`elem${i}`).style.backgroundColor;
@@ -32,15 +32,26 @@
                     set(i, y),
                     set(j, x),
                 ]).then(() => Promise.resolve())
-            )).finally(() => {
+            ), 300).finally(() => {
 				document.getElementById(`elem${i}`).style.backgroundColor = color;
 				document.getElementById(`elem${j}`).style.backgroundColor = color;
 			})
 		}
 
-        const compare = (i, j) =>
-            Promise.all([i, j].map(get))
-                .then(([x, y]) => x - y);
+        const compare = (i, j) => {
+			const color = document.getElementById(`elem${i}`).style.backgroundColor;
+			document.getElementById(`elem${i}`).style.backgroundColor = "yellow";
+			document.getElementById(`elem${j}`).style.backgroundColor = "yellow";
+            return sleeper(() =>
+				Promise.all([i, j].map(get))
+					.then(([x, y]) => x - y),
+				100,
+			).finally((value) => {
+				document.getElementById(`elem${i}`).style.backgroundColor = color;
+				document.getElementById(`elem${j}`).style.backgroundColor = color;
+				return value;
+			});
+		}
 
         const maxSlice = (start, lim) => {
             const f = (acc, i) => i === lim ? Promise.resolve(acc) :
@@ -75,7 +86,7 @@
                     .then(() => siftDown(0, last))
                     .then(() => body(last - 1));
 
-            return heapify(n >> 1)
+            return heapify(~~(n / base))
                 .then(() => body(n - 1));
         })
 
