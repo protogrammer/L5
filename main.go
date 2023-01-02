@@ -42,8 +42,6 @@ func (data *UserData) Set(i int, val int) {
 func main() {
 	router := gin.Default()
 
-	router.Use(gin.Logger())
-	router.Use(gin.Recovery())
 	router.LoadHTMLGlob("static/*")
 
 	if err := router.SetTrustedProxies(nil); err != nil {
