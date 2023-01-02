@@ -11,7 +11,11 @@
             method: 'GET',
         })
             .then(data => data.json())
-            .then(obj => Number(obj.value));
+            .then(obj => Number(obj.value))
+            .then(val => {
+                document.getElementById(`elem${i}`).innerHTML = String(val);
+                return val;
+            });
 
         const set = (i, val) => fetch(`/api/set?i=${i}&v=${val}`, {
             method: 'PUT',
